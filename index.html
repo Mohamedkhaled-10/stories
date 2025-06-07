@@ -180,7 +180,7 @@
 
   let currentIndex = 0;
   let slideInterval;
-  let adDuration = 150000; // 15 ثانية
+  const adDuration = 150000; // 150 ثانية (2.5 دقيقة)
   let adFinished = false;
 
   function changeSlide() {
@@ -210,18 +210,20 @@
     }
   }
 
-  // منع الرجوع زر Back في WebView قدر الإمكان
+  // منع زر الرجوع داخل الصفحة عبر pushState و popstate
   function preventBack() {
     history.pushState(null, null, location.href);
   }
 
   window.onload = function() {
+    preventBack(); // تثبيت حالة الـ history بمجرد تحميل الصفحة
+
     setTimeout(() => {
       popup.style.display = 'flex';
-      document.body.style.overflow = 'hidden'; // منع السحب خلف الإعلان
+      document.body.style.overflow = 'hidden'; // منع التمرير خلف الإعلان
       slideInterval = setInterval(changeSlide, 3000);
-      preventBack();
-    }, 5000);
+      preventBack(); // إعادة تثبيت الحالة بعد فتح الإعلان
+    }, 3000); // الإعلان يظهر بعد 3 ثواني فقط
 
     setTimeout(() => {
       adFinished = true;
@@ -238,12 +240,16 @@
     }
   });
 
-  window.addEventListener('beforeunload', function (e) {
-    if (!adFinished) {
-      e.preventDefault();
-      e.returnValue = '';
+  // إرسال إشارة لـ GoNative إذا موجودة أن الإعلان انتهى
+  function notifyAdFinished() {
+    if (window.GoNativeApp && window.GoNativeApp.postMessage) {
+      window.GoNativeApp.postMessage('adFinished');
     }
-  });
+  }
+
+  setTimeout(() => {
+    notifyAdFinished();
+  }, adDuration);
 </script>
 
 </body>
