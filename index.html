@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>إعلان منبثق - صور متغيرة</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f0f0;
+    overflow: hidden; /* منع التمرير خلف الإعلان */
+  }
+  #popup {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 20px;
+  }
+  #popup-content {
+    position: relative;
+    background: #fff;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 90vh;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    text-align: center;
+    padding: 10px 15px 40px;
+    font-family: 'Arial Black', Gadget, sans-serif;
+    color: #222;
+  }
+  #popup-content img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    transition: opacity 0.8s ease-in-out;
+    user-select: none;
+    pointer-events: none;
+  }
+  #close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: #ff3b3b;
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 22px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px #ff3b3b;
+    transition: background-color 0.3s ease;
+    z-index: 10001;
+    pointer-events: auto;
+  }
+  #close-btn:hover {
+    background: #e02a2a;
+  }
+  #popup-content h2 {
+    margin: 10px 0 15px;
+    font-size: 22px;
+    color: #e63946;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  #popup-content p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #555;
+  }
+  #popup-content a.cta-button {
+    display: inline-block;
+    background-color: #e63946;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 5px 15px rgba(230, 57, 70, 0.5);
+    transition: background-color 0.3s ease;
+  }
+  #popup-content a.cta-button:hover {
+    background-color: #b32a30;
+  }
+  @media (max-width: 480px) {
+    #popup-content {
+      max-width: 95vw;
+      padding: 10px 10px 30px;
+    }
+    #popup-content h2 {
+      font-size: 18px;
+    }
+    #popup-content p {
+      font-size: 14px;
+    }
+    #close-btn {
+      width: 30px;
+      height: 30px;
+      font-size: 18px;
+      top: 8px;
+      right: 10px;
+    }
+  }
+  /* إشعار التنبيه */
+  #notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(230, 57, 70, 0.9);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 5px 15px rgba(230, 57, 70, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 10002;
+    max-width: 90vw;
+    text-align: center;
+  }
+  #notification.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+</head>
+<body>
+
+  <div id="popup" aria-modal="true" role="dialog" aria-labelledby="popup-title" aria-describedby="popup-desc">
+    <div id="popup-content">
+      <button id="close-btn" aria-label="إغلاق الإعلان">&times;</button>
+      <h2 id="popup-title">عرض خاص</h2>
+      <p id="popup-desc">لا تفوت الفرصة! اكتشف عروضنا المميزة الآن.</p>
+      <img src="images/slide1.webp" alt="صورة إعلان 1" />
+      <a href="#" class="cta-button">اشترِك الآن</a>
+    </div>
+  </div>
+
+  <div id="notification" role="alert" aria-live="assertive"></div>
+
+<script>
+  const images = [
+    "images/slide1.webp",
+    "images/slide2.webp",
+    "images/slide3.webp",
+    "images/slide4.webp"
+  ];
+
+  function preloadImages(urls) {
+    urls.forEach(url => {
+      const img = new Image();
+      img.src = url;
+    });
+  }
+  preloadImages(images);
+
+  const popup = document.getElementById('popup');
+  const popupContent = document.getElementById('popup-content');
+  const closeBtn = document.getElementById('close-btn');
+  const imgElement = popupContent.querySelector('img');
+  const notification = document.getElementById('notification');
+
+  let currentIndex = 0;
+  let slideInterval;
+  let adDuration = 150000; // 15 ثانية
+  let adFinished = false;
+
+  function changeSlide() {
+    currentIndex = (currentIndex + 1) % images.length;
+    imgElement.style.opacity = 0;
+    setTimeout(() => {
+      imgElement.src = images[currentIndex];
+      imgElement.style.opacity = 1;
+    }, 500);
+  }
+
+  function showNotification(message) {
+    notification.textContent = message;
+    notification.classList.add('show');
+    setTimeout(() => {
+      notification.classList.remove('show');
+    }, 3000);
+  }
+
+  function closeAd() {
+    if (adFinished) {
+      popup.style.display = 'none';
+      clearInterval(slideInterval);
+      document.body.style.overflow = 'auto';
+    } else {
+      showNotification("انتظر حتى ينتهي الإعلان");
+    }
+  }
+
+  // منع الرجوع زر Back في WebView قدر الإمكان
+  function preventBack() {
+    history.pushState(null, null, location.href);
+  }
+
+  window.onload = function() {
+    setTimeout(() => {
+      popup.style.display = 'flex';
+      document.body.style.overflow = 'hidden'; // منع السحب خلف الإعلان
+      slideInterval = setInterval(changeSlide, 3000);
+      preventBack();
+    }, 5000);
+
+    setTimeout(() => {
+      adFinished = true;
+      showNotification("يمكنك الآن إغلاق الإعلان");
+    }, adDuration);
+  };
+
+  closeBtn.onclick = closeAd;
+
+  window.addEventListener('popstate', function(event) {
+    if (!adFinished) {
+      preventBack();
+      showNotification("انتظر حتى ينتهي الإعلان");
+    }
+  });
+
+  window.addEventListener('beforeunload', function (e) {
+    if (!adFinished) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+</script>
+
+</body>
+</html>
